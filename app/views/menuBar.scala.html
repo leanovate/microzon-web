@@ -1,0 +1,30 @@
+@()(implicit userContext:UserContext)
+
+<ul class="nav navbar-nav">
+    <li>
+        <a href="@routes.ShopController.index()">Shop</a>
+    </li>
+</ul>
+<ul class="nav navbar-nav navbar-right">
+    <li>
+        <a href="@routes.ShopController.showCart()">Cart: @userContext.cart.flatMap(_.itemCount).getOrElse(0) items</a>
+    </li>
+    @if(userContext.isAuthenticated) {
+        <li class="disabled">
+            <a href="#">@userContext.customer.map(_.email)</a>
+        </li>
+        <li>
+            <a href="#">Profile</a>
+        </li>
+        <li>
+            <a href="@routes.UserLoginController.logout()">Logout</a>
+        </li>
+    } else {
+        <li>
+            <a href="@routes.UserLoginController.showForm()">Login</a>
+        </li>
+        <li>
+            <a href="@routes.UserRegistrationController.showForm()">Register</a>
+        </li>
+    }
+</ul>

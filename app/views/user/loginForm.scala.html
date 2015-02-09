@@ -1,0 +1,26 @@
+@(loginForm: Form[models.user.Login])(implicit userContext: UserContext)
+
+@import views.BootstrapHelper._
+
+@main("Existing user login") {
+    <h1>Login</h1>
+
+    @loginForm.globalErrors.map { error =>
+        <div class="alert alert-danger" role="alert">
+            <ul>
+                @error.messages.map { msg =>
+                    <li>@msg</li>
+                }
+            </ul>
+        </div>
+    }
+    @helper.form(action = routes.UserLoginController.submitForm(), 'class -> "form-horizontal") {
+        @helper.inputText(loginForm("email"), 'id -> "inputEmail", 'class -> "form-control")
+        @helper.inputPassword(loginForm("password"), 'id -> "inputPassword", 'class -> "form-control")
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default">Login</button>
+            </div>
+        </div>
+    }
+}

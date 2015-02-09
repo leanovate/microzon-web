@@ -1,0 +1,27 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET         /                         @controllers.ApplicationController.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /assets/*file             controllers.Assets.at(path="/public", file)
+
+GET         /webjars/*file            controllers.WebJarAssets.at(file)
+
+GET         /user/login               @controllers.UserLoginController.showForm
+POST        /user/login               @controllers.UserLoginController.submitForm
+GET         /user/logout              @controllers.UserLoginController.logout
+GET         /user/registration        @controllers.UserRegistrationController.showForm
+POST        /user/registration        @controllers.UserRegistrationController.submitForm
+
+GET         /shop                     @controllers.ShopController.index
+GET         /shop/category/:id        @controllers.ShopController.category(id:String)
+GET         /shop/product/:id         @controllers.ShopController.product(id:String, option:Option[String] ?= None)
+POST        /shop/addToCart           @controllers.ShopController.addToCart
+GET         /shop/cart                @controllers.ShopController.showCart
+GET         /show/checkout            @controllers.ShopController.checkOut
+
+GET         /status/alive             @controllers.StatusController.alive
+GET         /status/services          @controllers.StatusController.services

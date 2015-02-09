@@ -1,0 +1,28 @@
+@(registrationForm: Form[models.user.Registration])(implicit userContext: UserContext)
+
+@import views.BootstrapHelper._
+
+@main("New user registration") {
+
+    <h1>Register</h1>
+
+    @registrationForm.globalErrors.map { error =>
+        <div class="alert alert-danger" role="alert">
+            <ul>
+                @error.messages.map { msg =>
+                    <li>@msg</li>
+                }
+            </ul>
+        </div>
+    }
+    @helper.form(action = routes.UserRegistrationController.submitForm(), 'class -> "form-horizontal") {
+        @helper.inputText(registrationForm("email"), 'id -> "inputEmail", 'class -> "form-control")
+        @helper.inputPassword(registrationForm("password"), 'id -> "inputPassword", 'class -> "form-control")
+        @helper.inputPassword(registrationForm("passwordRepeat"), 'id -> "inputPasswordRepeat", 'class -> "form-control")
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default">Register</button>
+            </div>
+        </div>
+    }
+}
