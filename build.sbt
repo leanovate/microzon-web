@@ -22,13 +22,27 @@ libraryDependencies ++= Seq(
   "com.github.kristofa" % "brave-zipkin-spancollector" % "2.2.1"
 )
 
-target in Universal := Option(System.getenv("DIST_DIR")).map(new File(_)).getOrElse(baseDirectory.value / ".." / "vagrant/dists")
+val debian = TaskKey[Unit]("debian", "Create debian package")
 
-val distDocker = TaskKey[Unit]("dist-docker", "Copies assembly jar")
-
-distDocker <<= (NativePackagerKeys.dist in Universal, baseDirectory) map { (asm, base) => 
-   val source = asm.getPath
-   var target = (base / ".." / "docker/web/dist").getPath
-   Seq("mkdir", "-p", target) !!;
-   Seq("cp", source, target) !!
+debian <<= (NativePackagerKeys.dist in Universal, baseDirectory, version) map { (distOut, base, ver) =>
+  val bintrayUser = System.getenv("BINTRAY_USER")
+  val bintrayKey = System.getenv("BINTRAY_KEY")
+  val release = ver + "-" + System.getenv("TRAVIS_BUILD_NUMBER")
+  val debOut = (base / "target" / "microzon-web.deb")
+  val debBase = (base / "target" / "deb")
+  IO.unzip(distOut, debBase / "opt")
+  IO.move(debBase / "opt" / s"web-$ver", debBase / "opt" / "web")
+  IO.write(debBase / "DEBIAN" / "control",
+    s"""Package: microzon-web
+    |Version: $release
+    |Section: misc
+    |Priority: extra
+    |Architecture: all
+    |Depends: supervisor, oracle-java8-installer
+    |Maintainer: Bodo Junglas <landru@untoldwind.net>
+    |Homepage: http://github.com/leanovate/microzon
+    |Description: Web facade service
+    |""".stripMargin)
+  s"/usr/bin/fakeroot /usr/bin/dpkg-deb -b ${debBase.getPath} ${debOut.getPath}" !;
+  s"/usr/bin/curl -T ${debOut.getPath} -u${bintrayUser}:${bintrayKey} https://api.bintray.com/content/untoldwind/deb/microzon/${ver}/pool/main/m/microzon/microzon-web-${release}_all.deb;deb_distribution=trusty;deb_component=main;deb_architecture=all?publish=1" !
 }
