@@ -1,7 +1,7 @@
 package backend
 
 import logging.{CorrelatedLogging, CorrelationContext}
-import models.consul.{HealthInfo, NodeInfo}
+import models.consul.HealthInfo
 import play.api.libs.concurrent.Execution.Implicits._
 import scaldi.{Injectable, Injector}
 
@@ -13,14 +13,24 @@ class ServiceFailover(implicit inj: Injector) extends Injectable with Correlated
   private val random = new Random(System.currentTimeMillis())
 
   def retry[R](serviceName: String, uri: String)(requester: String => Future[R])(implicit collectionContext: CorrelationContext): Future[R] = {
-    def tryRequest(healthInfos: Seq[HealthInfo], offset:Int, idx: Int): Future[R] = {
+
+    def tryRequester(url: String): Future[R] = {
+      try {
+        requester(url)
+      } catch {
+        case e: Throwable =>
+          Future.failed(e)
+      }
+    }
+
+    def tryRequest(healthInfos: Seq[HealthInfo], offset: Int, idx: Int): Future[R] = {
       val healthInfo = healthInfos((offset + idx) % healthInfos.size)
       val url = s"http://${healthInfo.Node.Address}:${healthInfo.Service.Port}$uri"
 
       withMdc {
         log.info(s"Service try: $url")
       }
-      requester(url).recoverWith {
+      tryRequester(url).recoverWith {
         case e: Throwable =>
           withMdc {
             log.info(s"Trigger retry on $e")
